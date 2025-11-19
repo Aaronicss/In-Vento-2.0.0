@@ -29,7 +29,7 @@ export default function LoginScreen() {
 
       if (data.user) {
         Alert.alert('Login Successful', 'Welcome to In-Vento!');
-        router.push('/home'); // navigate to new tile-based home screen
+        router.push('/(tabs)/home'); // navigate to the tabs-based home screen
       }
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'Please check your email or password.');
@@ -62,7 +62,7 @@ export default function LoginScreen() {
       if (data.user) {
         Alert.alert('Sign Up Successful', 'Your account has been created! Please check your email to verify your account.');
         // Optionally navigate to home after sign up
-        // router.push('/home');
+        // router.push('/(tabs)/home');
       }
     } catch (error: any) {
       Alert.alert('Sign Up Failed', error.message || 'Failed to create account. Please try again.');

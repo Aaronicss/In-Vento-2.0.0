@@ -17,9 +17,6 @@ export default function RootLayout() {
             {/* Tabs Group (Dashboard) */}
             <Stack.Screen name="(tabs)" />
 
-            {/* Take Order Screen */}
-            <Stack.Screen name="take-order" />
-
             {/* Add Inventory Item Screen */}
             <Stack.Screen name="add-inventory-item" />
 

@@ -108,7 +108,7 @@ export default function CameraScreen() {
         : null;
 
       router.push({
-        pathname: '/(tabs)/detection-results',
+        pathname: '/detection-results',
         params: { detectedItem: detectedParam ? JSON.stringify(detectedParam) : undefined },
       });
 

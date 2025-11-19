@@ -2,7 +2,7 @@ import { Colors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { OrderItem, useOrders } from '../contexts/OrdersContext';
+import { OrderItem, useOrders } from '../../contexts/OrdersContext';
 
 export default function TakeOrderScreen() {
   const router = useRouter();

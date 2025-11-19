@@ -16,22 +16,45 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[scheme].tint,
         headerShown: false,
-        tabBarStyle: { display: "none" }, 
         tabBarButton: HapticTab,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 64,
+          paddingBottom: 8,
+          backgroundColor: Colors[scheme].background,
+          borderTopWidth: 0,
+        },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
       }}>
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          tabBarStyle: { display: "none" },
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} />,
         }}
-      /><Tabs.Screen
+      />
+
+      <Tabs.Screen
         name="inventory"
         options={{
-          tabBarStyle: { display: "none" },
           title: 'Inventory',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Orders',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="chevron.right" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="take-order"
+        options={{
+          title: 'Take Order',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="paperplane.fill" color={color} />,
         }}
       />
     </Tabs>

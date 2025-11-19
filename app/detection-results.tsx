@@ -4,20 +4,20 @@ import Constants from 'expo-constants';
 import { Router, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useInventory } from '../../contexts/InventoryContext';
-import { getShelfLifePrediction } from '../../services/freshnessApi';
-import { fetchWeatherData } from '../../services/weatherApi';
+import { useInventory } from '../contexts/InventoryContext';
+import { getShelfLifePrediction } from '../services/freshnessApi';
+import { fetchWeatherData } from '../services/weatherApi';
 
 // Available icons mapping
 const availableIcons: { [key: string]: any } = {
-  burgerbun: require('../../assets/burgerbun.png'),
-  beef: require('../../assets/beef.png'),
-  lettuce: require('../../assets/lettuce.png'),
-  cheese: require('../../assets/cheese.png'),
-  tomato: require('../../assets/tomato.png'),
-  onion: require('../../assets/onion.png'),
-  burger: require('../../assets/burger.png'),
-  drink: require('../../assets/drink.png'),
+  burgerbun: require('../assets/burgerbun.png'),
+  beef: require('../assets/beef.png'),
+  lettuce: require('../assets/lettuce.png'),
+  cheese: require('../assets/cheese.png'),
+  tomato: require('../assets/tomato.png'),
+  onion: require('../assets/onion.png'),
+  burger: require('../assets/burger.png'),
+  drink: require('../assets/drink.png'),
 };
 
 const nameToIconMap: { [key: string]: string } = {
