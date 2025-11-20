@@ -48,8 +48,8 @@ export default function AddInventoryItemScreen() {
   const [loading, setLoading] = useState(false);
 
   // Support multiple rows similar to take-order
-  const [rows, setRows] = useState<Array<{ id: string; name: string; count: string; shelfLifeDays: string; iconKey: string; predictedExpiryDate: Date | null; fetchingPrediction?: boolean }>>([
-    { id: `row-${Date.now()}`, name: '', count: '1', shelfLifeDays: '7', iconKey: 'burger', predictedExpiryDate: null, fetchingPrediction: false },
+  const [rows, setRows] = useState<Array<{ id: string; name: string; count: string; shelfLifeDays: string; iconKey: string; predictedExpiryDate: Date | null; fetchingPrediction?: boolean; storageLocation?: string }>>([
+    { id: `row-${Date.now()}`, name: '', count: '1', shelfLifeDays: '7', iconKey: 'burger', predictedExpiryDate: null, fetchingPrediction: false, storageLocation: 'REFRIGERATOR' },
   ]);
 
   // track last requested per-row to avoid race conditions
@@ -72,7 +72,7 @@ export default function AddInventoryItemScreen() {
         const icon = r.iconKey.toLowerCase();
         const expiresAt = r.predictedExpiryDate || undefined;
 
-        await addInventoryItem(name, icon, countNum, shelfLifeNum, expiresAt);
+        await addInventoryItem(name, icon, countNum, shelfLifeNum, expiresAt, r.storageLocation);
       }
 
       Alert.alert('Items Added', `${validRows.length} item(s) have been added to inventory!`, [
@@ -195,7 +195,19 @@ export default function AddInventoryItemScreen() {
               </View>
             )}
 
-            <Text style={[styles.label, { marginTop: 8 }]}>Quantity</Text>
+                <Text style={[styles.label, { marginTop: 8 }]}>Storage Location</Text>
+                <View style={[styles.pickerWrapper, { marginBottom: 8 }]}> 
+                  <Picker
+                    selectedValue={r.storageLocation || 'REFRIGERATOR'}
+                    onValueChange={(value) => updateRow(r.id, { storageLocation: value })}
+                  >
+                    <Picker.Item label="REFRIGERATOR" value="REFRIGERATOR" />
+                    <Picker.Item label="FREEZER" value="FREEZER" />
+                    <Picker.Item label="PANTRY" value="PANTRY" />
+                  </Picker>
+                </View>
+
+                <Text style={[styles.label, { marginTop: 8 }]}>Quantity</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter quantity"

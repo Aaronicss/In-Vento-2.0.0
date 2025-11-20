@@ -105,22 +105,6 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={[styles.logoutButton, loggingOut && styles.buttonDisabled]}
-            onPress={handleLogout}
-            disabled={loggingOut}
-          >
-            {loggingOut ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Buttons */}
       <View style={styles.buttonContainer}>

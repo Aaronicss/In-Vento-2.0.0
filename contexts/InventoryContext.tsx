@@ -20,6 +20,7 @@ export interface InventoryItem {
   id: string;
   name: string;
   icon: string;
+  storageLocation?: string;
   count: number;
   progress: number;
   timeRemaining: string;
@@ -42,7 +43,7 @@ interface InventoryContextType {
   inventoryItems: InventoryItem[];
   loading: boolean;
   // shelfLifeDays is optional if expiresAt is provided
-  addInventoryItem: (name: string, icon: string, count: number, shelfLifeDays?: number, expiresAt?: Date) => Promise<void>;
+  addInventoryItem: (name: string, icon: string, count: number, shelfLifeDays?: number, expiresAt?: Date, storageLocation?: string) => Promise<void>;
   updateInventoryItem: (itemId: string, updates: Partial<InventoryItem>) => Promise<void>;
   removeInventoryItem: (itemId: string) => Promise<void>;
   incrementCount: (itemId: string) => Promise<void>;
@@ -126,6 +127,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           id: item.id,
           name: item.name,
           icon: item.icon,
+          storageLocation: item.storage_location,
           count: item.count,
           progress,
           timeRemaining,
@@ -156,7 +158,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // CRUD functions
-  const addInventoryItem = async (name: string, icon: string, count: number, shelfLifeDays?: number, expiresAt?: Date) => {
+  const addInventoryItem = async (name: string, icon: string, count: number, shelfLifeDays?: number, expiresAt?: Date, storageLocation?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -167,14 +169,22 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       const daysToAdd = typeof shelfLifeDays === 'number' && !isNaN(shelfLifeDays) ? shelfLifeDays : 7;
       if (!expiresAt) finalExpiresAt.setDate(finalExpiresAt.getDate() + daysToAdd);
 
-      const { error } = await supabase.from('inventory_items').insert([{
+      const insertObj: any = {
         user_id: user.id,
         name,
         icon,
         count,
         created_at: createdAt.toISOString(),
         expires_at: finalExpiresAt.toISOString(),
-      }]);
+      };
+
+      // include storage location if provided in updates (backwards-compatible)
+      // Note: callers may pass storageLocation via additional parameter in future patches
+      // We check if arguments length > 5 to read storageLocation from arguments
+      // storageLocation param is the sixth parameter; prefer explicit param
+      if (storageLocation) insertObj.storage_location = storageLocation;
+
+      const { error } = await supabase.from('inventory_items').insert([insertObj]);
 
       if (error) throw error;
       await fetchInventoryItems();
@@ -190,6 +200,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.icon !== undefined) updateData.icon = updates.icon;
       if (updates.count !== undefined) updateData.count = updates.count;
+      if ((updates as any).storageLocation !== undefined) updateData.storage_location = (updates as any).storageLocation;
       if (updates.expiresAt !== undefined) updateData.expires_at = updates.expiresAt.toISOString();
       if (updates.createdAt !== undefined) updateData.created_at = updates.createdAt.toISOString();
 

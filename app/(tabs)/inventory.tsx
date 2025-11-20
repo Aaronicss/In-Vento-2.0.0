@@ -185,7 +185,12 @@ export default function InventoryScreen() {
             <View key={item.id} style={styles.tile}>
               <View style={styles.tileTop}>
                 <Image source={getIconSource(item.icon)} style={styles.tileIcon} />
-                <Text style={styles.tileName} numberOfLines={2}>{item.name}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.tileName} numberOfLines={2}>{item.name}</Text>
+                    {item.storageLocation ? (
+                      <Text style={styles.tileLocation}>{item.storageLocation}</Text>
+                    ) : null}
+                  </View>
               </View>
 
               <ProgressBar
@@ -450,6 +455,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(17, 24, 28, 0.7)',
     marginBottom: 8,
+  },
+  tileLocation: {
+    fontSize: 11,
+    color: 'rgba(17,24,28,0.6)',
+    marginTop: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   tileFooter: {
     flexDirection: 'row',
