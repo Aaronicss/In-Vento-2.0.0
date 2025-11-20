@@ -8,6 +8,7 @@ export const iconMap: { [key: string]: any } = {
   burgerbun: require('../assets/burgerbun.png'),
   beef: require('../assets/beef.png'),
   lettuce: require('../assets/lettuce.png'),
+  pickles: require('../assets/pickles.png'), // placeholder: reuse lettuce image until a dedicated pickle asset is provided
   cheese: require('../assets/cheese.png'),
   tomato: require('../assets/tomato.png'),
   onion: require('../assets/onion.png'),

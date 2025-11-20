@@ -24,6 +24,7 @@ const nameToIconMap: { [key: string]: string } = {
   "BURGER BUN": "burgerbun",
   "BEEF": "beef",
   "LETTUCE": "lettuce",
+  "PICKLES": "pickles",
   "CHEESE": "cheese",
   "TOMATO": "tomato",
   "ONION": "onion",

@@ -24,6 +24,7 @@ const nameToIconMap: { [key: string]: string } = {
   "BURGER BUN": "burgerbun",
   "BEEF": "beef",
   "LETTUCE": "lettuce",
+  "PICKLES": "pickles",
   "CHEESE": "cheese",
   "TOMATO": "tomato",
   "ONION": "onion",
@@ -178,6 +179,7 @@ export default function AddInventoryItemScreen() {
   <Picker.Item label="BURGER BUN" value="BURGER BUN" />
   <Picker.Item label="BEEF" value="BEEF" />
   <Picker.Item label="LETTUCE" value="LETTUCE" />
+  <Picker.Item label="PICKLES" value="PICKLES" />
   <Picker.Item label="CHEESE" value="CHEESE" />
   <Picker.Item label="TOMATO" value="TOMATO" />
   <Picker.Item label="ONION" value="ONION" />
