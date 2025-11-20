@@ -120,12 +120,7 @@ export default function HomeScreen() {
             )}
           </TouchableOpacity>
         </View>
-        <Text style={styles.title}>IN-VENTO:</Text>
-        <Text style={styles.subtitle}>Intelligent Inventory System</Text>
       </View>
-
-      {/* Greeting */}
-      <Text style={styles.greeting}>GOOD MORNING, USER!</Text>
 
       {/* Buttons */}
       <View style={styles.buttonContainer}>
@@ -134,12 +129,6 @@ export default function HomeScreen() {
           onPress={() => router.push('/take-order')}
         >
           <Text style={styles.buttonText}>TAKE ORDER</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-        style={styles.button}
-        onPress={() => router.push("/(tabs)/inventory")}
-        >
-          <Text style={styles.buttonText}>MANAGE INVENTORY</Text>
         </TouchableOpacity>
       </View>
 
