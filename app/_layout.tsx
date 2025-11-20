@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/theme';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -26,12 +26,15 @@ export default function RootLayout() {
     </SafeAreaView>
   );
 
+  const segments = useSegments();
+  const isLogin = segments.some((s) => s === 'login');
+
   return (
     <OrdersProvider>
       <InventoryProvider>
         {/* Force DefaultTheme (light) globally regardless of system settings */}
         <ThemeProvider value={DefaultTheme}>
-          <Header />
+          {!isLogin && <Header />}
           <Stack screenOptions={{ headerShown: false }}>
             {/* Login Screen */}
             <Stack.Screen name="login" />

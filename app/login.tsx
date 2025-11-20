@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Easing, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
@@ -10,6 +10,26 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Animated background burger image
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const scaleSeq = Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.05, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.98, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]);
+
+    const rotateSeq = Animated.sequence([
+      Animated.timing(rotateAnim, { toValue: 1, duration: 4000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(rotateAnim, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]);
+
+    const loop = Animated.loop(Animated.parallel([scaleSeq, rotateSeq]));
+    loop.start();
+    return () => loop.stop();
+  }, [scaleAnim, rotateAnim]);
 
   // Login with Supabase
   const handleLogin = async () => {
@@ -78,14 +98,17 @@ export default function LoginScreen() {
 
       <Text style={styles.loginText}>{isSignUp ? 'USER SIGN UP' : 'USER LOGIN'}</Text>
 
-      <Image
+      <Animated.Image
         source={require('../assets/burger.png')} // replace with your burger image
-        style={styles.image}
+        style={[styles.image, styles.animatedImage, { transform: [{ scale: scaleAnim }, { rotate: rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['-3deg', '3deg'] }) }] }]}
       />
+
+      <View style={styles.form}>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="rgba(17,24,28,0.45)"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -96,6 +119,7 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="rgba(17,24,28,0.45)"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -103,13 +127,15 @@ export default function LoginScreen() {
         autoComplete="password"
       />
 
+      </View>
+
       <TouchableOpacity 
         style={[styles.button, loading && styles.buttonDisabled]} 
         onPress={isSignUp ? handleSignUp : handleLogin}
         disabled={loading}
       >
         {loading ? (
-          <ActivityIndicator color="#000" />
+          <ActivityIndicator color={Colors.light.tint} />
         ) : (
           <Text style={styles.buttonText}>{isSignUp ? 'Sign Up' : 'Login'}</Text>
         )}
@@ -132,48 +158,66 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.background,
+    backgroundColor: Colors.light.tint,
+    position: 'relative',
     paddingHorizontal: 20,
   },
-  title: { fontSize: 28, fontWeight: '800', marginBottom: 5, color: Colors.light.text },
-  subtitle: { fontSize: 14, marginBottom: 20, color: 'rgba(17, 24, 28, 0.7)' },
-  loginText: { fontSize: 18, fontWeight: '700', marginBottom: 20, color: Colors.light.tint },
+  title: { fontSize: 28, fontWeight: '800', marginBottom: 5, color: '#FFFFFF' },
+  subtitle: { fontSize: 14, marginBottom: 20, color: 'rgba(255,255,255,0.9)' },
+  loginText: { fontSize: 18, fontWeight: '700', marginBottom: 20, color: '#FFFFFF' },
   image: { width: 200, height: 200, borderRadius: 20, marginBottom: 20, resizeMode: "contain" },
+  animatedImage: {
+    position: 'absolute',
+    top: 80,
+    width: 320,
+    height: 320,
+    opacity: 0.12,
+    zIndex: 0,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  form: {
+    zIndex: 1,
+    width: '100%',
+    alignItems: 'center',
+  },
   input: {
     width: '80%',
-    backgroundColor: '#FFF7ED',
+    backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 12,
     marginVertical: 8,
     textAlign: 'center',
     color: Colors.light.text,
     borderWidth: 1,
-    borderColor: 'rgba(244, 162, 97, 0.15)',
+    borderColor: 'rgba(0,0,0,0.06)',
     fontSize: 15,
   },
   button: {
     width: '60%',
-    backgroundColor: Colors.light.tint,
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginTop: 12,
-    shadowColor: Colors.light.tint,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 6,
+    borderWidth: 1,
+    borderColor: Colors.light.tint,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  buttonText: { textAlign: 'center', fontWeight: '700', color: '#FFFFFF', fontSize: 16 },
+  buttonText: { textAlign: 'center', fontWeight: '700', color: Colors.light.tint, fontSize: 16 },
   switchButton: {
     marginTop: 15,
     padding: 10,
   },
   switchText: {
     textAlign: 'center',
-    color: 'rgba(17, 24, 28, 0.6)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
   },
 });
