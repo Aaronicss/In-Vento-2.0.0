@@ -47,6 +47,8 @@ interface InventoryContextType {
   removeInventoryItem: (itemId: string) => Promise<void>;
   incrementCount: (itemId: string) => Promise<void>;
   decrementCount: (itemId: string) => Promise<void>;
+  // Decrement multiple ingredients based on an aggregated usage map: { INGREDIENT_NAME: qty }
+  decrementIngredients: (usageMap: Record<string, number>) => Promise<void>;
   refreshInventory: () => Promise<void>;
   refreshFreshnessPredictions: () => Promise<void>;
 }
@@ -218,7 +220,67 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
   const decrementCount = async (itemId: string) => {
     const item = inventoryItems.find(i => i.id === itemId);
-    if (item) await updateInventoryItem(itemId, { count: Math.max(0, item.count - 1) });
+    if (item) {
+      const newCount = Math.max(0, item.count - 1);
+      if (newCount === 0) {
+        // remove the item when it reaches 0
+        await removeInventoryItem(itemId);
+      } else {
+        await updateInventoryItem(itemId, { count: newCount });
+      }
+    }
+  };
+
+  // Decrement across multiple inventory rows for each ingredient.
+  // This consumes from the earliest-expiring rows first (FIFO by expiry) until the needed quantity is satisfied.
+  const decrementIngredients = async (usageMap: Record<string, number>) => {
+    try {
+      // Work on a snapshot of current inventory items
+      const snapshot = [...inventoryItems];
+
+      for (const ingredientName of Object.keys(usageMap)) {
+        let needed = usageMap[ingredientName];
+        if (!needed || needed <= 0) continue;
+
+        // Find matching items (case-insensitive) with available count > 0, sorted by expiresAt ascending
+        const matches = snapshot
+          .filter(i => i.name.toUpperCase() === ingredientName.toUpperCase() && i.count > 0)
+          .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime());
+
+        for (const row of matches) {
+          if (needed <= 0) break;
+          const take = Math.min(row.count, needed);
+          const newCount = Math.max(0, row.count - take);
+
+          // Update DB for this row. If newCount === 0, delete the row instead.
+          if (newCount === 0) {
+            const { error } = await supabase.from('inventory_items').delete().eq('id', row.id);
+            if (error) {
+              console.error('Error deleting inventory row', row.id, error);
+            } else {
+              // reflect deletion in our snapshot
+              row.count = 0;
+              needed -= take;
+            }
+          } else {
+            const { error } = await supabase.from('inventory_items').update({ count: newCount }).eq('id', row.id);
+            if (error) {
+              console.error('Error decrementing inventory row', row.id, error);
+            } else {
+              // also update our local snapshot so subsequent iterations use updated counts
+              row.count = newCount;
+              needed -= take;
+            }
+          }
+        }
+      }
+
+      // Refresh the in-memory list once after all updates
+      await fetchInventoryItems();
+    } catch (error) {
+      console.error('Error in decrementIngredients:', error);
+      throw error;
+    }
   };
 
   // Refresh freshness predictions using Expo Constants
@@ -269,6 +331,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         decrementCount,
         refreshInventory: fetchInventoryItems,
         refreshFreshnessPredictions,
+        decrementIngredients,
       }}
     >
       {children}

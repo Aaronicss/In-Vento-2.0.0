@@ -1,15 +1,50 @@
 import { Colors } from '@/constants/theme';
+import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useInventory } from '../../contexts/InventoryContext';
 import { OrderItem, useOrders } from '../../contexts/OrdersContext';
 
 export default function TakeOrderScreen() {
   const router = useRouter();
   const { addOrder, orders } = useOrders();
+  const { inventoryItems, updateInventoryItem, refreshInventory, decrementIngredients } = useInventory();
   const [items, setItems] = useState<OrderItem[]>([
     { id: 'item-1', name: '', quantity: 1 },
   ]);
+
+  // Recipe definitions (ingredient names should match inventory `name` values)
+  const RECIPES: { [key: string]: Array<{ ingredient: string; qty: number }> } = {
+    'Cheeseburger': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'CHEESE', qty: 1 }],
+    'Classic Hamburger': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'LETTUCE', qty: 1 }, { ingredient: 'TOMATO', qty: 1 }, { ingredient: 'ONION', qty: 1 }, { ingredient: 'PICKLES', qty: 1 }],
+    'Deluxe Cheeseburger': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'CHEESE', qty: 1 }, { ingredient: 'LETTUCE', qty: 1 }, { ingredient: 'TOMATO', qty: 1 }, { ingredient: 'ONION', qty: 1 }, { ingredient: 'PICKLES', qty: 1 }],
+    'Garden Cheeseburger': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'CHEESE', qty: 1 }, { ingredient: 'LETTUCE', qty: 1 }, { ingredient: 'TOMATO', qty: 1 }],
+    'Double Cheese Burger': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'CHEESE', qty: 2 }],
+    'Fully Loaded': [{ ingredient: 'BEEF', qty: 1 }, { ingredient: 'LETTUCE', qty: 1 }, { ingredient: 'CHEESE', qty: 1 }, { ingredient: 'TOMATO', qty: 1 }, { ingredient: 'ONION', qty: 1 }, { ingredient: 'PICKLES', qty: 1 }],
+  };
+
+  // Compute recipes that are currently available given inventory counts
+  const availableRecipes = useMemo(() => {
+    const available: string[] = [];
+    Object.keys(RECIPES).forEach((rName) => {
+      const recipe = RECIPES[rName];
+      const ok = recipe.every((req) => {
+        const found = inventoryItems.find(i => i.name.toUpperCase() === req.ingredient.toUpperCase());
+        return !!found && found.count >= req.qty;
+      });
+      if (ok) available.push(rName);
+    });
+    return available;
+  }, [inventoryItems]);
+
+  // Ensure inventory is loaded when this screen mounts (some environments may not have fetched yet)
+  useEffect(() => {
+    if (!inventoryItems || inventoryItems.length === 0) {
+      // don't await to avoid blocking UI; fire-and-forget
+      refreshInventory().catch((e) => console.warn('refreshInventory failed:', e));
+    }
+  }, []);
 
   const addItem = () => {
     setItems([...items, { id: `item-${Date.now()}`, name: '', quantity: 1 }]);
@@ -47,10 +82,45 @@ export default function TakeOrderScreen() {
       return;
     }
 
+    // Build aggregated usage map BEFORE creating the order so we can validate availability
+    const usageMap: Record<string, number> = {};
+    validItems.forEach((it) => {
+      const recipe = RECIPES[it.name as string];
+      if (!recipe) return;
+      recipe.forEach((r) => {
+        usageMap[r.ingredient] = (usageMap[r.ingredient] || 0) + r.qty * it.quantity;
+      });
+    });
+
+    // Verify sum across all inventory rows for each ingredient meets the needed quantity
+    const insufficient: string[] = [];
+    for (const ing of Object.keys(usageMap)) {
+      const needed = usageMap[ing];
+      const totalAvailable = inventoryItems
+        .filter(i => i.name.toUpperCase() === ing.toUpperCase())
+        .reduce((sum, row) => sum + (row.count || 0), 0);
+      if (totalAvailable < needed) insufficient.push(`${ing} (need ${needed}, have ${totalAvailable})`);
+    }
+
+    if (insufficient.length > 0) {
+      Alert.alert('Insufficient Inventory', `Cannot place order. Missing: ${insufficient.join(', ')}`);
+      return;
+    }
+
     setLoading(true);
     try {
       // Add order to context
       await addOrder(customerNumber, validItems);
+
+      // After adding the order, decrement inventory counts based on recipe usage
+      try {
+        console.log('Order usageMap:', usageMap);
+
+        // Use the context helper to decrement across rows (handles multiple rows and expiry ordering)
+        await decrementIngredients(usageMap);
+      } catch (err) {
+        console.error('Error decrementing inventory after order:', err);
+      }
 
       Alert.alert('Order Added', `Order for Customer #${customerNumber} has been added!`, [
         {
@@ -105,12 +175,21 @@ export default function TakeOrderScreen() {
               )}
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Item name (e.g., Cheeseburger)"
-              value={item.name}
-              onChangeText={(value) => updateItem(item.id, 'name', value)}
-            />
+            <View style={[styles.input, { paddingHorizontal: 0, paddingVertical: 0 }]}> 
+              <Picker
+                selectedValue={item.name}
+                onValueChange={(value) => updateItem(item.id, 'name', value)}
+              >
+                <Picker.Item label="Select a recipe..." value="" />
+                {availableRecipes.length === 0 ? (
+                  <Picker.Item label="No recipes available (low inventory)" value="" />
+                ) : (
+                  availableRecipes.map((r) => (
+                    <Picker.Item key={r} label={r} value={r} />
+                  ))
+                )}
+              </Picker>
+            </View>
 
             <View style={styles.quantityContainer}>
               <Text style={styles.quantityLabel}>Quantity:</Text>
