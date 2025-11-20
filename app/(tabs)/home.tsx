@@ -28,10 +28,39 @@ export default function TileHome() {
     { key: 'alerts', label: 'Alerts', route: '/alerts', icon: 'bell.fill', count: 0 },
   ];
 
+  // compute alerts using same rule as Alerts page
+  const alerts = inventoryItems.map((it) => {
+    const now = Date.now();
+    const created = it.createdAt.getTime();
+    const expires = it.expiresAt.getTime();
+    const total = expires - created;
+    const remaining = Math.max(0, expires - now);
+    const progress = total <= 0 ? 0 : Math.max(0, Math.min(1, remaining / total));
+    const severity: 'critical' | 'warning' | 'ok' = progress <= 0.15 ? 'critical' : progress <= 0.4 ? 'warning' : 'ok';
+    return { item: it, progress, severity };
+  }).filter(a => a.severity !== 'ok');
+
+  const criticalCount = alerts.filter(a => a.severity === 'critical').length;
+  const warningCount = alerts.filter(a => a.severity === 'warning').length;
+
+  // update alerts tile count and attach severity counts
+  tiles.forEach((t) => {
+    if (t.key === 'alerts') {
+      t.count = alerts.length;
+      (t as any).critical = criticalCount;
+      (t as any).warning = warningCount;
+    }
+  });
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>IN-VENTO</Text>
       <Text style={styles.subtitle}>Quick Navigation</Text>
+
+      {/* compute alerts count for badge */}
+      {/** derive alerts using same rule as alerts page */}
+      {/** this is a noop render block used to compute alertsCount in component scope */}
+      <></>
 
       <View style={styles.grid}>
         {tiles.map((t, idx) => {
@@ -60,7 +89,7 @@ export default function TileHome() {
                 </View>
 
                 {t.count > 0 && (
-                  <View style={styles.badge}>
+                  <View style={[styles.badge, t.key === 'alerts' && (t as any).critical > 0 ? styles.criticalBadge : null]}>
                     <Text style={styles.badgeText}>{t.count}</Text>
                   </View>
                 )}
@@ -146,6 +175,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  criticalBadge: {
+    backgroundColor: '#e63946'
   },
   badgeText: {
     color: '#fff',
