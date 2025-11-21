@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } fr
 
 // 🔥 Roboflow API URL (Detection or Classification)
 const MODEL_NAME = "in-vento-xuxyq"; // example: "food-items"
-const MODEL_VERSION = "3";
+const MODEL_VERSION = "2";
 const API_KEY = "F02xuve8P2KEBhMSFZph";
 
 const ROBOFLOW_URL = `https://detect.roboflow.com/${MODEL_NAME}/${MODEL_VERSION}?api_key=${API_KEY}`;
